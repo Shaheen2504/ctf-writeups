@@ -1,0 +1,26 @@
+Challenge: agent_lfi 
+Flag: (obtained via LFI through download oracle)
+
+Vulnerability:
+Local File Inclusion (LFI) via a download/file parameter in the VIHS application. The application
+included local files based on user-supplied input without properly sanitizing path traversal sequences.
+A "hidden wallet" file was stored on the server and accessible by exploiting this LFI vulnerability.
+
+How I solved it:
+1. Logged into VIHS using SQL injection bypass.
+2. Identified the LFI vector through the download oracle: the ?p=download&dir=X&file=Y parameter
+   returned HTTP 500 when a directory existed, acting as a boolean oracle to enumerate directories.
+3. Scanned directory IDs 0-120 to find existing upload directories.
+4. Probed known filenames (wallet.php, gRaB.php, secret.php, etc.) across found directories.
+5. Located the hidden wallet file and retrieved its contents directly via the upload path.
+6. The file contained the flag in a $key variable  format.
+
+Alternatively, used php://filter/convert.base64-encode/resource=<target> to read PHP source files
+and decode them to find the flag location.
+
+Mitigation:
+- Never pass user-controlled input to file inclusion functions (include, require, file_get_contents).
+- Use a whitelist of allowed page/file names instead of dynamic inclusion.
+- Disable PHP wrappers (allow_url_include=Off, allow_url_fopen=Off) in php.ini.
+- Implement proper access controls so sensitive files are not accessible from the web root.
+- Use chroot jails or containerization to limit file system access.

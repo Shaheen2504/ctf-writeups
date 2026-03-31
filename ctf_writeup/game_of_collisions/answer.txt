@@ -1,0 +1,26 @@
+Challenge: game_of_collisions
+
+Vulnerability:
+PHP Type Juggling vulnerability in the Apps page of the VIHS application. The server compared
+two MD5 hashes using PHP's loose comparison operator (==) instead of strict comparison (===).
+In PHP, strings starting with "0e" followed by digits are interpreted as floating-point numbers
+(scientific notation: 0 * 10^N = 0), so any two such "magic hashes" are considered equal under ==.
+
+How I solved it:
+1. Identified the Apps page (?p=apps&f=1) accepts two arguments (arg1, arg2) and compares their
+   MD5 hashes using loose comparison.
+2. Used known PHP "magic hashes" — strings whose MD5 hash starts with "0e" followed only by digits:
+     0e215962017  →  MD5: 0e291242476940776845150308577824
+     0e807097110  →  MD5: 0e289979931537747905798937436305
+3. Submitted arg1=0e215962017 and arg2=0e807097110.
+   PHP evaluated: "0e291242..." == "0e289979..." as 0 == 0 → TRUE.
+4. The flag was revealed in the response.
+
+Alternative: Array bypass — sending arg1[]=a&arg2[]=b causes md5() to return NULL for arrays,
+and NULL == NULL is also TRUE in PHP loose comparison.
+
+Mitigation:
+- Always use strict comparison (===) when comparing hashes or security-sensitive values.
+- Use hash_equals() for constant-time secure hash comparison.
+- Never compare MD5 hashes with == in PHP.
+- Consider using more modern hashing approaches (SHA-256+) with proper comparison.

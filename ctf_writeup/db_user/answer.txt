@@ -1,0 +1,18 @@
+Challenge: db_user 
+
+Vulnerability:
+Blind SQL Injection in the login form password field. The boolean oracle allowed extraction of the current database user using the user() SQL function.
+
+How I solved it:
+Used the same blind SQLi technique as db_name, but targeting user() instead
+of database():
+
+Payload: ' OR id=23 AND ascii(mid(user(),{i},1))={ord(c)} #
+
+Iterated character by character until no match was found.
+
+Mitigation:
+- Use prepared statements to prevent SQL injection entirely.
+- Restrict DB user privileges to minimum necessary (SELECT only on app tables).
+- Implement rate limiting on login to slow automated extraction.
+- Use a WAF to detect repeated similar blind SQLi patterns.

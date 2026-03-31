@@ -1,0 +1,26 @@
+Challenge: headers_speaks_loudly 
+
+Vulnerability:
+The VIHS application reads and processes specific HTTP request headers (such as User-Agent, Referer,
+X-Forwarded-For, or custom headers) and either stores them in the database or uses them in application
+logic without sanitization. This allows an attacker to manipulate application behavior or inject values
+by crafting specific HTTP headers.
+
+How I solved it:
+1. Logged into VIHS using SQL injection.
+2. Identified that the application inspects HTTP headers for certain functionality (the Apps or
+   Settings page checks headers like User-Agent, Referer, DNT, X-UIDH, etc.).
+3. Set specific header values that the application expected:
+     User-Agent:   
+     Referer:      referer.example.com
+     DNT:          1
+     X-UIDH:       <specific value>
+     Cookie:       admin=1
+4. Made a GET request to /?p=apps&f=2 with these crafted headers.
+5. The application validated the headers and revealed the flag in the response.
+
+Mitigation:
+- Never use HTTP headers as a security mechanism or for authentication/authorization decisions.
+- Treat all HTTP headers as untrusted user input.
+- Do not store raw header values in the database without sanitization.
+- Implement proper session-based authentication rather than relying on header values.

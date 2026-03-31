@@ -1,0 +1,22 @@
+Challenge: hidden_agent
+
+Vulnerability:
+Blind SQL Injection in the login form. A special user with email='hidden' exists in the database.
+The application's boolean response (presence of username in page) allowed character-by-character
+extraction of the hidden user's password hash.
+
+How I solved it:
+I discovered a user with email='hidden' in the database through user enumeration via blind SQLi.
+I then extracted the password field of this hidden user using the same blind SQLi oracle technique:
+
+Payload template:
+  ' OR email='hidden' AND ascii(mid(password,{i},1))={ord(c)} #
+
+The response containing the hidden user's name confirmed each correct character. T
+
+Mitigation:
+- Use prepared statements to prevent SQL injection.
+- Do not store sensitive accounts (like 'hidden' or 'admin') with exploitable credentials in
+  the same database as regular users.
+- Implement consistent response times regardless of query results to prevent timing/boolean oracles.
+- Apply input validation and rate limiting on login endpoints.

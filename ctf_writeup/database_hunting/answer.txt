@@ -1,0 +1,28 @@
+Challenge: database_hunting (250 pts)
+Flag: (obtained via UNION-based SQL injection through search functionality)
+
+Vulnerability:
+SQL Injection in the search/name parameter of the VIHS application. Unlike the login form,
+the search feature was vulnerable to UNION-based injection with obfuscated keywords to bypass
+simple WAF/filter rules (e.g., replacing SELECT with sSELECTelect, WHERE with wWHEREhere).
+
+How I solved it:
+1. Identified the search parameter (name= in ?p=search) as injectable.
+2. Bypassed keyword filters by doubling keywords: SELECT→sSELECTelect, WHERE→wWHEREhere,
+   UNION→uUNIONnion, etc.
+3. Used UNION-based injection to extract table names from information_schema:
+
+   Payload: ' ununionion sselectelect null,(sselectelect group_concat(table_name) 
+             from infoorrmation_schema.tables wwherehere table_schema=schema()),
+             null,...#--
+
+4. Identified special tables (prefixed with 'ft') that contained the flag data.
+5. Extracted column names and then dumped the data from those tables.
+6. Found the flag in the dumped table data.
+
+Mitigation:
+- Use prepared statements — keyword-based WAF filters are easily bypassed and are not
+  a substitute for parameterized queries.
+- Apply the principle of least privilege: the DB user should only have SELECT on necessary tables.
+- Remove or restrict access to information_schema for the application database user.
+- Implement proper input validation and output encoding.

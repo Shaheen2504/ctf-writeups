@@ -1,0 +1,22 @@
+Challenge: the_game_begin 
+
+Vulnerability:
+SQL Injection in the login form of the VIHS (Vulnerable Insecure & Hackable Social Network) application.
+The password field was vulnerable to classic SQL injection because user input was directly concatenated
+into the SQL query without sanitization:
+  SELECT * FROM users WHERE email='$email' AND MD5(password)='$pass_hash'
+
+How I solved it:
+I injected a payload into the password field that short-circuits the AND condition using OR:
+  Email:    attacker@example.com
+  Password: ' OR email='attacker@example.com' #
+
+The # character comments out the rest of the SQL query. This caused the server to log me in as my
+own account, bypassing the MD5 password check entirely. After logging in, the flag was visible in
+the Bio section of my profile page.
+
+Mitigation:
+- Use prepared statements / parameterized queries (e.g., PDO or MySQLi with bound parameters).
+- Never concatenate user input directly into SQL queries.
+- Apply input validation and sanitization on all user-supplied fields.
+- Use a Web Application Firewall (WAF) to detect and block SQL injection attempts.

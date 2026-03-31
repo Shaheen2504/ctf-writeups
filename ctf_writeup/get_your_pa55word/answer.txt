@@ -1,0 +1,21 @@
+Challenge: get_your_pa55word 
+
+Vulnerability:
+Blind SQL Injection in the login form password field. The application did not directly display
+query results, but the presence or absence of the user's name ("xyz") in the response
+acted as a boolean oracle, allowing character-by-character extraction of data from the database.
+
+How I solved it:
+After confirming SQL injection worked (from the_game_begin), I used a blind SQLi technique to
+extract the MD5 password hash stored for my account (id=23).
+
+Payload template used:
+  ' OR id=23 AND ascii(mid(password,{i},1))={ord(c)} #
+
+For each character position i, I iterated over all printable ASCII characters c.
+
+Mitigation:
+- Use prepared statements / parameterized queries to prevent SQL injection entirely.
+- Avoid leaking user-identifying information in HTTP responses that can be used as an oracle.
+- Implement rate limiting and account lockout to slow down brute-force extraction attacks.
+- Store passwords using a strong adaptive hashing algorithm (bcrypt, Argon2) instead of MD5.
